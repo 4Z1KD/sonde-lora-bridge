@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sonde‑LoRa‑Bridge</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-b from-slate-950 via-blue-950 to-slate-900 text-gray-200 font-sans leading-relaxed">
+
+  <header class="px-6 py-16 text-center">
+    <h1 class="text-4xl sm:text-5xl font-bold tracking-tight"><i class="fas fa-parachute-box"></i> Sonde‑LoRa‑Bridge <i class="fas fa-network-wired"></i></h1>
+    <p class="mt-4 max-w-2xl mx-auto text-gray-400 text-lg">
+      A lightweight bridge for sending radiosonde and telemetry data over LoRa‑based mesh networks.
+    </p>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-6 pb-20 pt-8">
+
+    <section class="mb-16">
+      <h2 class="text-3xl font-bold mb-6 border-l-4 border-cyan-400 pl-3">System Components</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+        <div class="bg-gradient-to-b from-blue-900 to-blue-950 rounded-xl p-6 shadow-lg border border-white/5 hover:shadow-xl hover:-translate-y-1 transition-all">
+          <h3 class="text-xl font-semibold mb-2 text-blue-400 flex items-center gap-3"><i class="fas fa-download text-xl flex-shrink-0"></i>Data Receiver</h3>
+          <p class="text-gray-300 text-sm mb-3">
+            Entry point of the data pipeline. Responsible for ingesting raw telemetry
+            from external sources.
+          </p>
+          <ul class="mt-2 ml-5 text-gray-400 text-xs space-y-1 list-disc">
+            <li>Listens on a configurable UDP port</li>
+            <li>Receives and validates incoming packets</li>
+            <li>Forwards data to the Workload Manager</li>
+          </ul>
+        </div>
+
+        <div class="bg-gradient-to-b from-blue-900 to-blue-950 rounded-xl p-6 shadow-lg border border-white/5 hover:shadow-xl hover:-translate-y-1 transition-all">
+          <h3 class="text-xl font-semibold mb-2 text-blue-400 flex items-center gap-3"><i class="fas fa-tasks text-xl flex-shrink-0"></i>Workload Manager</h3>
+          <p class="text-gray-300 text-sm mb-3">
+            Controls buffering and execution timing to balance latency and throughput.
+          </p>
+          <ul class="mt-2 ml-5 text-gray-400 text-xs space-y-1 list-disc">
+            <li>Buffers incoming data items</li>
+            <li>Supports time‑based and count‑based thresholds</li>
+            <li>Executes a callback when either threshold is reached</li>
+          </ul>
+        </div>
+
+        <div class="bg-gradient-to-b from-blue-900 to-blue-950 rounded-xl p-6 shadow-lg border border-white/5 hover:shadow-xl hover:-translate-y-1 transition-all">
+          <h3 class="text-xl font-semibold mb-2 text-blue-400 flex items-center gap-3"><i class="fas fa-compress text-xl flex-shrink-0"></i>Data Optimizer</h3>
+          <p class="text-gray-300 text-sm mb-3">
+            Reduces payload size to minimize bandwidth usage and transmission cost.
+          </p>
+          <ul class="mt-2 ml-5 text-gray-400 text-xs space-y-1 list-disc">
+            <li>Minimizes keys and values</li>
+            <li>Preserves semantic meaning</li>
+            <li>Supports JSON and CBOR2 encoding and decoding</li>
+          </ul>
+        </div>
+
+        <div class="bg-gradient-to-b from-emerald-900 to-emerald-950 rounded-xl p-6 shadow-lg border border-green-500/20 hover:shadow-xl hover:-translate-y-1 transition-all">
+          <h3 class="text-xl font-semibold mb-2 text-green-400 flex items-center gap-3"><i class="fas fa-network-wired text-xl flex-shrink-0"></i>Meshtastic Client</h3>
+          <p class="text-gray-300 text-sm mb-3">
+            Provides messaging capabilities over a Meshtastic mesh network using a
+            locally attached device.
+          </p>
+          <ul class="mt-2 ml-5 text-gray-400 text-xs space-y-1 list-disc">
+            <li>Connects to Meshtastic hardware via serial</li>
+            <li>Manages device connection lifecycle</li>
+            <li>Sends and receives mesh messages</li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <section>
+      <h2 class="text-3xl font-bold mb-6 border-l-4 border-cyan-400 pl-3">Data Flow</h2>
+      <div class="bg-gradient-to-br from-blue-900/30 to-slate-900/30 rounded-2xl p-8 border border-white/5">
+        <code class="block bg-slate-900/60 px-5 py-4 rounded-lg font-mono text-cyan-400 text-sm whitespace-pre-wrap">
+UDP Source (radiosonde_auto_rx, SDRAngel decoder, etc.)
+   │
+   ▼
+Data Receiver
+   │
+   ▼
+Workload Manager ──► (time / count threshold)
+   │
+   ▼
+Data Optimizer (JSON / CBOR2)
+   │
+   ▼
+Meshtastic Client ──► Mesh Network
+        </code>
+      </div>
+    </section>
+
+  </main>
+
+  <header class="px-6 py-1 text-center">
+    <h1 class="text-4xl sm:text-5xl font-bold tracking-tight"><i class="fas fa-parachute-box"></i> Sonde‑LoRa‑Client <i class="fas fa-network-wired"></i></h1>
+    <p class="mt-4 max-w-2xl mx-auto text-gray-400 text-lg">
+      A matching client for receiving radiosonde and telemetry data over LoRa‑based mesh networks.
+    </p>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-6 pb-20 pt-8">
+
+    <section class="mb-16">
+      <h2 class="text-3xl font-bold mb-6 border-l-4 border-cyan-400 pl-3">System Components</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">        
+
+        <div class="bg-gradient-to-b from-emerald-900 to-emerald-950 rounded-xl p-6 shadow-lg border border-green-500/20 hover:shadow-xl hover:-translate-y-1 transition-all">
+          <h3 class="text-xl font-semibold mb-2 text-green-400 flex items-center gap-3"><i class="fas fa-network-wired text-xl flex-shrink-0"></i>Meshtastic Client</h3>
+          <p class="text-gray-300 text-sm mb-3">
+            Provides messaging capabilities over a Meshtastic mesh network using a
+            locally attached device.
+          </p>
+          <ul class="mt-2 ml-5 text-gray-400 text-xs space-y-1 list-disc">
+            <li>Connects to Meshtastic hardware via serial</li>
+            <li>Manages device connection lifecycle</li>
+            <li>Sends and receives mesh messages</li>
+          </ul>
+        </div>
+
+        <div class="bg-gradient-to-b from-blue-900 to-blue-950 rounded-xl p-6 shadow-lg border border-white/5 hover:shadow-xl hover:-translate-y-1 transition-all">
+          <h3 class="text-xl font-semibold mb-2 text-blue-400 flex items-center gap-3"><i class="fas fa-compress text-xl flex-shrink-0"></i>Data Optimizer</h3>
+          <p class="text-gray-300 text-sm mb-3">
+            Reduces payload size to minimize bandwidth usage and transmission cost.
+          </p>
+          <ul class="mt-2 ml-5 text-gray-400 text-xs space-y-1 list-disc">
+            <li>Minimizes keys and values</li>
+            <li>Preserves semantic meaning</li>
+            <li>Supports JSON and CBOR2 encoding and decoding</li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <section>
+      <h2 class="text-3xl font-bold mb-6 border-l-4 border-cyan-400 pl-3">Data Flow</h2>
+      <div class="bg-gradient-to-br from-blue-900/30 to-slate-900/30 rounded-2xl p-8 border border-white/5">
+        <code class="block bg-slate-900/60 px-5 py-4 rounded-lg font-mono text-cyan-400 text-sm whitespace-pre-wrap">
+Mesh Network Source
+   │
+   ▼
+Meshtastic Client
+   │
+   ▼
+Data Optimizer (JSON / CBOR2)
+   │
+   ▼
+Output Data
+        </code>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="text-center py-12 px-6 text-gray-500 text-sm">
+    Sonde‑LoRa‑Bridge · Modular Telemetry Bridging · Documentation
+  </footer>
+
+</body>
+</html>
