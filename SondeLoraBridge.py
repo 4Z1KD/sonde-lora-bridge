@@ -2,7 +2,6 @@ from DataReceiver import DataReceiver
 from WorkloadManager import WorkloadManager
 from DataOptimizer import DataOptimizer
 from MeshtasticClient import MeshtasticClient
-from sondehubdecoders.RS41 import decode
 from datetime import datetime, timezone
 import json
 import threading
@@ -104,100 +103,6 @@ class SondeLoraBridge:
         if self.reboot_thread:
             self.reboot_thread.join(timeout=5)
         print("Reboot timer stopped")
-
-    @DeprecationWarning
-    def process_data_from_sdrangel(self, raw_data):
-        """
-        Process decoded RS41 data and create a minimal packet.
-
-        Args:
-            raw_data (str): Hex-encoded RS41 data
-        """
-        try:
-            # Decode using RS41 decoder
-            result = decode(raw_data)            
-            
-            # Parse and create minimal package
-            now_iso = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-            
-            # Extract common data
-            common = result.get("common", {})
-            blocks = result.get("blocks", {})
-            status = blocks.get("Status", {})
-            gps_pos = blocks.get("GPS Position", {})
-            measurements = blocks.get("Measurements", {})
-            
-            # bare minimum Data Transfer Object
-            dto = {
-                "serial": common.get("serial", ""),
-                "frame": common.get("frame", 0),                
-                "lat": common.get("lat", 0),
-                "lon": common.get("lon", 0),
-                "alt": common.get("alt", 0),
-            }
-            
-            '''
-            # should be added at the receiver side
-            essential = {
-                "software_name": "sonde-lora-bridge",
-                "software_version": "1.0.0",
-                "uploader_callsign": "4Z1KD",
-                "manufacturer": "Vaisala",
-                "time_received": now_iso,
-                "datetime": common.get("datetime", now_iso),
-                "type": common.get("type", "RS41")
-            }
-            '''
-
-            '''
-            # too big to send every time
-            extension = {
-                "payload_callsign": common.get("serial", ""),
-                "frequency": result.get("frequency", 0),
-                "temp": measurements.get("pressure_temp", 0),
-                "humidity": measurements.get("humidity_main", 0),
-                "vel_h": common.get("vel_h", 0),
-                "vel_v": common.get("vel_v", 0),
-                "pressure": measurements.get("pressure_main", 0),
-                "heading": common.get("heading", 0),
-                "batt": common.get("batt", 0),
-                "sats": common.get("sats", 0),
-                "snr": result.get("snr", 0),
-                "rssi": result.get("rssi", 0),
-                "uploader_position": [0, 0, 0],
-                "uploader_antenna": "",
-                "telemetry_hidden": False,
-                "historical": False,
-                "upload_time": now_iso
-            }
-            '''
-            
-            # Convert DTO to CBOR2
-            cbor_data = self.optimizer.to_cbor2(dto)
-            print(cbor_data.hex())
-            
-            # Send CBOR data via Meshtastic to target device
-            if self.meshtastic_client.is_connected() and self.target_device_id:
-                self.meshtastic_client.send_direct_message(
-                    self.target_device_id,
-                    f"{cbor_data.hex()}"
-                )
-                print(f"CBOR data sent to {self.target_device_id}")
-            else:
-                # connect if not connected
-                print("Connecting to Meshtastic device...")
-                if self.meshtastic_client.connect():
-                    print("Connected to Meshtastic device.")
-                    self.meshtastic_client.send_direct_message(
-                        self.target_device_id,
-                        f"{cbor_data.hex()}"
-                    )
-                    print(f"CBOR data sent to {self.target_device_id}")
-                else:
-                    print("Failed to connect to Meshtastic device.")
-
-        except Exception as e:
-            print(f"Error decoding: {e}")
     
     def process_data(self, raw_data):
         """
