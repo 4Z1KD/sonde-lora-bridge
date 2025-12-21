@@ -61,7 +61,7 @@ class SondeLoraBridge:
             data (str): encoded data from the listener
         """
         if data:
-            self.manager.receive(data)
+            self.manager.addWork(data)
             #print(data)
             #print(f"Data received and forwarded to manager: {len(data)} bytes")
 
