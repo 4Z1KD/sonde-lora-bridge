@@ -1,6 +1,7 @@
 from MeshtasticClient import MeshtasticClient
 from DataOptimizer import DataOptimizer
 from PacketLogger import PacketLogger
+from ConfigLoader import ConfigLoader
 import json
 import time
 
@@ -113,8 +114,7 @@ class SondeLoraClient:
 
 if __name__ == "__main__":
     # Load config
-    with open("config.json", "r") as f:
-        config = json.load(f)
+    config = ConfigLoader.load_config()
 
     client_port = config.get("client", {}).get("meshtastic_port", None)
 

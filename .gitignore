@@ -2,7 +2,7 @@
 sondehubdecoders/
 packet_logs/
 
-config.json
+config.dev.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

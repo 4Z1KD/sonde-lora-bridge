@@ -2,6 +2,7 @@ from DataReceiver import DataReceiver
 from WorkloadManager import WorkloadManager
 from DataOptimizer import DataOptimizer
 from MeshtasticClient import MeshtasticClient
+from ConfigLoader import ConfigLoader
 from datetime import datetime, timezone
 import json
 import threading
@@ -184,12 +185,11 @@ class SondeLoraBridge:
 
 if __name__ == "__main__":
     # Load config
-    with open("config.json", "r") as f:
-        config = json.load(f)
+    config = ConfigLoader.load_config()
 
-        bridge_config = config.get("bridge", {})
-        meshtastic_port = bridge_config.get("meshtastic_port", None)
-        target_device_id = bridge_config.get("target_device_id", None)
+    bridge_config = config.get("bridge", {})
+    meshtastic_port = bridge_config.get("meshtastic_port", None)
+    target_device_id = bridge_config.get("target_device_id", None)
 
     bridge = SondeLoraBridge(
         host='0.0.0.0',
