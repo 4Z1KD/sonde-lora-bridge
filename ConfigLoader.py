@@ -9,14 +9,17 @@ class ConfigLoader:
     def load_config():
         """
         Load configuration, preferring config.dev.json over config.public.json.
+        Paths are relative to the script directory.
 
         Returns:
             dict: Configuration dictionary
         """
-        config_path = (
-            "config.dev.json"
-            if os.path.exists("config.dev.json")
-            else "config.public.json"
-        )
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        dev_config = os.path.join(script_dir, "config.dev.json")
+        public_config = os.path.join(script_dir, "config.public.json")
+        
+        config_path = dev_config if os.path.exists(dev_config) else public_config
+        
         with open(config_path, "r") as f:
             return json.load(f)
