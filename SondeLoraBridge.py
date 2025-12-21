@@ -16,7 +16,7 @@ class SondeLoraBridge:
     """
 
     def __init__(self, host='0.0.0.0', port=8080, count_threshold=10, 
-                 time_threshold=15):
+                 time_threshold=15, meshtastic_port='COM4'):
         """
         Initialize the bridge.
 
@@ -44,7 +44,7 @@ class SondeLoraBridge:
         self.optimizer = DataOptimizer()
         
         # Initialize Meshtastic client
-        self.meshtastic_client = MeshtasticClient(port="COM4")
+        self.meshtastic_client = MeshtasticClient(port=meshtastic_port)
         self.target_device_id = None
         
         # Reboot timer
@@ -183,19 +183,28 @@ class SondeLoraBridge:
 
 
 if __name__ == "__main__":
+    # Load config
+    with open("config.json", "r") as f:
+        config = json.load(f)
+
+        bridge_config = config.get("bridge", {})
+        meshtastic_port = bridge_config.get("meshtastic_port", None)
+        target_device_id = bridge_config.get("target_device_id", None)
+
     bridge = SondeLoraBridge(
         host='0.0.0.0',
         port=8080,
         count_threshold=6,
-        time_threshold=60
+        time_threshold=60,
+        meshtastic_port=meshtastic_port
     )
-    
-    # Connect to Meshtastic device
-    bridge.target_device_id = '!06f562b8'
+
+    # Set target device ID from config
+    bridge.target_device_id = target_device_id
+
     if bridge.meshtastic_client.connect():
         # Start reboot timer (every 1 hour)
         bridge.start_reboot_timer(interval=3600)
-        
         bridge.start()
     else:
         print("Failed to connect to Meshtastic device")

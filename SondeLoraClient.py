@@ -16,7 +16,7 @@ class SondeLoraClient:
         Initialize the sonde client.
         
         Args:
-            port (str): Serial port of Meshtastic device (e.g., 'COM3', '/dev/ttyUSB0').
+            port (str): Serial port of Meshtastic device (e.g., 'COM3', '/dev/ttyUSB0', '/dev/lilygo').
                        If None, will auto-detect.
             channel (int): Specific channel to listen on. If None, listens to all channels.
             source_node_id (int or str): Specific source node ID to listen to. 
@@ -112,15 +112,14 @@ class SondeLoraClient:
 
 
 if __name__ == "__main__":
-    # Create client and connect to Meshtastic device
-    # Examples:
-    # client = SondeClient(port=None)  # Auto-detect, listen to all
-    # client = SondeClient(port='COM3', channel=0)  # Listen only on channel 0
-    # client = SondeClient(port='COM3', source_node_id=3667817020)  # Listen to specific node
-    # client = SondeClient(port='COM3', channel=1, source_node_id=3667817020)  # Both filters
-    
-    client = SondeLoraClient(port="COM12")  # Auto-detect port, or specify e.g., 'COM3'
-    
+    # Load config
+    with open("config.json", "r") as f:
+        config = json.load(f)
+
+    client_port = config.get("client", {}).get("meshtastic_port", None)
+
+    client = SondeLoraClient(port=client_port)
+
     if client.connect():
         client.listen()
     else:
