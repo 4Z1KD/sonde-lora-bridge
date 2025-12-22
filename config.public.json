@@ -1,5 +1,10 @@
 {
   "bridge": {
+    "host": "0.0.0.0",
+    "port": 8080,
+    "count_threshold": 10,
+    "time_threshold": 15,
+    "meshtastic_reboot_interval": 3600,
     "meshtastic_port": "COM1",
     "target_device_id": "!12345678"
   },
