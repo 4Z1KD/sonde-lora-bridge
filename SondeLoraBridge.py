@@ -17,7 +17,7 @@ class SondeLoraBridge:
     """
 
     def __init__(self, host='0.0.0.0', port=8080, count_threshold=10, 
-                 time_threshold=15, meshtastic_port='COM4'):
+                 time_threshold=15, meshtastic_port='COM4', target_device_id=None):
         """
         Initialize the bridge.
 
@@ -26,6 +26,7 @@ class SondeLoraBridge:
             port (int): UDP port to listen on
             count_threshold (int): Number of items before triggering processing
             time_threshold (float): Time in seconds before triggering processing
+            target_device_id (str): Target Meshtastic device ID
         """
         # Create the workload manager with internal callback
         self.manager = WorkloadManager(
@@ -46,7 +47,7 @@ class SondeLoraBridge:
         
         # Initialize Meshtastic client
         self.meshtastic_client = MeshtasticClient(port=meshtastic_port)
-        self.target_device_id = None
+        self.target_device_id = target_device_id
         
         # Reboot timer
         self.reboot_thread = None
@@ -201,11 +202,9 @@ if __name__ == "__main__":
         port=port,
         count_threshold=count_threshold,
         time_threshold=time_threshold,
-        meshtastic_port=meshtastic_port
+        meshtastic_port=meshtastic_port,
+        target_device_id=target_device_id
     )
-
-    # Set target device ID from config
-    bridge.target_device_id = target_device_id
 
     if bridge.meshtastic_client.connect():
         # Start reboot timer
