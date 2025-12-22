@@ -17,7 +17,7 @@ class SondeLoraBridge:
     """
 
     def __init__(self, host='0.0.0.0', port=8080, count_threshold=10, 
-                 time_threshold=15, meshtastic_port='COM4', target_device_id=None):
+                 time_threshold=15, meshtastic_port=None, target_device_id=None):
         """
         Initialize the bridge.
 
