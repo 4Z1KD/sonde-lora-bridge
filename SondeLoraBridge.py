@@ -17,7 +17,7 @@ class SondeLoraBridge:
     """
 
     def __init__(self, host='0.0.0.0', port=8080, count_threshold=10, 
-                 time_threshold=15, meshtastic_port=None, target_device_id=None):
+                 time_threshold=15, meshtastic_port=None, target_device_id=None, target_channel_id=None):
         """
         Initialize the bridge.
 
@@ -26,7 +26,9 @@ class SondeLoraBridge:
             port (int): UDP port to listen on
             count_threshold (int): Number of items before triggering processing
             time_threshold (float): Time in seconds before triggering processing
-            target_device_id (str): Target Meshtastic device ID
+            meshtastic_port (str): Serial port for Meshtastic device
+            target_device_id (str): Target Meshtastic device ID for direct messages
+            target_channel_id (int): Target channel ID for channel messages
         """
         # Create the workload manager with internal callback
         self.manager = WorkloadManager(
@@ -48,6 +50,7 @@ class SondeLoraBridge:
         # Initialize Meshtastic client
         self.meshtastic_client = MeshtasticClient(port=meshtastic_port)
         self.target_device_id = target_device_id
+        self.target_channel_id = target_channel_id
         
         # Reboot timer
         self.reboot_thread = None
@@ -157,25 +160,27 @@ class SondeLoraBridge:
             cbor_data = self.optimizer.to_cbor2(dto)
             print(cbor_data.hex())
             
-            # Send CBOR data via Meshtastic to target device
-            if self.meshtastic_client.is_connected() and self.target_device_id:
+            # Send CBOR data via Meshtastic
+            # First, check if connected
+            if not self.meshtastic_client.is_connected():
+                print("Connecting to Meshtastic device...")
+                if not self.meshtastic_client.connect():
+                    print("Failed to connect to Meshtastic device.")
+                    return
+                print("Connected to Meshtastic device.")
+            
+            # Check if target_device_id is set
+            if self.target_device_id:
                 self.meshtastic_client.send_direct_message(
                     self.target_device_id,
                     f"{cbor_data.hex()}"
                 )
                 print(f"CBOR data sent to {self.target_device_id}")
             else:
-                # connect if not connected
-                print("Connecting to Meshtastic device...")
-                if self.meshtastic_client.connect():
-                    print("Connected to Meshtastic device.")
-                    self.meshtastic_client.send_direct_message(
-                        self.target_device_id,
-                        f"{cbor_data.hex()}"
-                    )
-                    print(f"CBOR data sent to {self.target_device_id}")
-                else:
-                    print("Failed to connect to Meshtastic device.")
+                self.meshtastic_client.send_channel_message(
+                    f"{cbor_data.hex()}"
+                )
+                print("CBOR data sent via channel message")
         
         except json.JSONDecodeError as e:
             print(f"Error parsing JSON: {e}")
@@ -196,6 +201,7 @@ if __name__ == "__main__":
     meshtastic_reboot_interval = bridge_config.get("meshtastic_reboot_interval", 3600)
     meshtastic_port = bridge_config.get("meshtastic_port", None)
     target_device_id = bridge_config.get("target_device_id", None)
+    target_channel_id = bridge_config.get("target_channel_id", None)
 
     bridge = SondeLoraBridge(
         host=host,
@@ -203,7 +209,8 @@ if __name__ == "__main__":
         count_threshold=count_threshold,
         time_threshold=time_threshold,
         meshtastic_port=meshtastic_port,
-        target_device_id=target_device_id
+        target_device_id=target_device_id,
+        target_channel_id=target_channel_id
     )
 
     if bridge.meshtastic_client.connect():
