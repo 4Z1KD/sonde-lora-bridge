@@ -17,7 +17,7 @@ class SondeLoraBridge:
     """
 
     def __init__(self, host='0.0.0.0', port=8080, count_threshold=10, 
-                 time_threshold=15, meshtastic_port=None, target_device_id=None, target_channel_id=None):
+                 time_threshold=15, meshtastic_port=None, target_device_id=None, channel=None):
         """
         Initialize the bridge.
 
@@ -28,7 +28,7 @@ class SondeLoraBridge:
             time_threshold (float): Time in seconds before triggering processing
             meshtastic_port (str): Serial port for Meshtastic device
             target_device_id (str): Target Meshtastic device ID for direct messages
-            target_channel_id (int): Target channel ID for channel messages
+            channel (int): Target channel ID for channel messages
         """
         # Create the workload manager with internal callback
         self.manager = WorkloadManager(
@@ -50,7 +50,7 @@ class SondeLoraBridge:
         # Initialize Meshtastic client
         self.meshtastic_client = MeshtasticClient(port=meshtastic_port)
         self.target_device_id = target_device_id
-        self.target_channel_id = target_channel_id
+        self.channel = channel
         
         # Reboot timer
         self.reboot_thread = None
@@ -176,13 +176,13 @@ class SondeLoraBridge:
                     f"{cbor_data.hex()}"
                 )
                 print(f"Data sent to device{self.target_device_id}")
-            # Check if target_channel_id is set
-            elif self.target_channel_id:
+            # Check if channel is set
+            elif self.channel:
                 self.meshtastic_client.send_channel_message(
-                    self.target_channel_id,
+                    self.channel,
                     f"{cbor_data.hex()}"
                 )
-                print(f"Data sent to channel {self.target_channel_id}")
+                print(f"Data sent to channel {self.channel}")
         
         except json.JSONDecodeError as e:
             print(f"Error parsing JSON: {e}")
@@ -203,7 +203,7 @@ if __name__ == "__main__":
     meshtastic_reboot_interval = bridge_config.get("meshtastic_reboot_interval", 3600)
     meshtastic_port = bridge_config.get("meshtastic_port", None)
     target_device_id = bridge_config.get("target_device_id", None)
-    target_channel_id = bridge_config.get("target_channel_id", None)
+    channel = bridge_config.get("channel", None)
 
     bridge = SondeLoraBridge(
         host=host,
@@ -212,7 +212,7 @@ if __name__ == "__main__":
         time_threshold=time_threshold,
         meshtastic_port=meshtastic_port,
         target_device_id=target_device_id,
-        target_channel_id=target_channel_id
+        channel=channel
     )
 
     if bridge.meshtastic_client.connect():

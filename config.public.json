@@ -7,9 +7,11 @@
     "meshtastic_reboot_interval": 3600,
     "meshtastic_port": "COM1",
     "target_device_id": "!12345678",
-    "target_channel_id": null
+    "channel": 1
   },
   "client": {
-    "meshtastic_port": "COM2"
+    "meshtastic_port": "COM2",
+    "source_device_id": "!abcdefgh",
+    "channel": 1
   }
 }
