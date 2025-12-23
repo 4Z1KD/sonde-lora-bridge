@@ -175,12 +175,14 @@ class SondeLoraBridge:
                     self.target_device_id,
                     f"{cbor_data.hex()}"
                 )
-                print(f"CBOR data sent to {self.target_device_id}")
-            else:
+                print(f"Data sent to device{self.target_device_id}")
+            # Check if target_channel_id is set
+            elif self.target_channel_id:
                 self.meshtastic_client.send_channel_message(
+                    self.target_channel_id,
                     f"{cbor_data.hex()}"
                 )
-                print("CBOR data sent via channel message")
+                print(f"Data sent to channel {self.target_channel_id}")
         
         except json.JSONDecodeError as e:
             print(f"Error parsing JSON: {e}")

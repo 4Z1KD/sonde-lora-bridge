@@ -88,7 +88,7 @@ class MeshtasticClient:
             print(f"Failed to send direct message: {e}")
             return False
     
-    def send_channel_message(self, message, channel=0):
+    def send_channel_message(self, channel, message):
         """
         Send a message to a channel.
         
@@ -199,7 +199,7 @@ if __name__ == "__main__":
         print(f"Message received: {packet}")
     
     # Create client
-    client = MeshtasticClient(receive_callback=on_message)
+    client = MeshtasticClient(port="COM4", receive_callback=on_message)
     
     # Connect
     if client.connect():
@@ -217,7 +217,7 @@ if __name__ == "__main__":
         '''
         
         # Send a test message to channel 0
-        #client.send_channel_message("Hello from Sonde LoRa Bridge!")
+        client.send_channel_message(channel=1, message="Sorry for QRM. Testing...")
         #client.send_direct_message(to_id='!da9e723c', message="Hello direct from Sonde LoRa Bridge!")
 
         # Keep running for a bit to receive messages
