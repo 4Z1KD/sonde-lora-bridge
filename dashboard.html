@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sonde Data Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 700px;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .file-input-label {
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .file-input-label:hover {
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg">
+            <div class="max-w-10xl mx-auto px-4 py-6">
+                <h1 class="text-3xl font-bold">Sonde Data Dashboard</h1>
+                <p class="text-blue-100 mt-2">Real-time weather balloon tracking and analysis</p>
+            </div>
+        </header>
+
+        <main class="max-w-10xl mx-auto px-4 py-8">
+            <!-- File Upload - Collapsible -->
+            <div class="bg-white rounded-lg shadow mb-6">
+                <button id="fileLoadingToggle" class="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition">
+                    <h3 class="text-lg font-bold text-gray-900">Load Data Files</h3>
+                    <svg id="toggleIcon" class="w-5 h-5 text-gray-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                    </svg>
+                </button>
+                
+                <div id="fileLoadingContent" class="border-t border-gray-200 p-6 hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Select JSONL Files</label>
+                            <div class="flex gap-2">
+                                <label class="file-input-label flex-1 px-4 py-2 border-2 border-dashed border-blue-300 rounded-md bg-blue-50 hover:bg-blue-100 hover:border-blue-500 transition font-medium text-gray-700">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                    <span id="fileInputLabel">Choose Files</span>
+                                    <input type="file" id="fileInput" multiple accept=".jsonl,.json" />
+                                </label>
+                                <button id="loadBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition">
+                                    Load Files
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Select one or more JSONL files from packet_logs/</p>
+                        </div>
+                        <div id="fileStatus" class="text-sm text-gray-600"></div>
+                    </div>
+                    
+                    <!-- Drag & Drop Area -->
+                    <div id="dropZone" class="p-6 border-2 border-dashed border-gray-300 rounded-lg text-center bg-gray-50 hover:bg-gray-100 transition cursor-pointer">
+                        <p class="text-gray-600">Or drag & drop JSONL files here</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
+                        <select id="dateFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">All Dates</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Callsign</label>
+                        <select id="callsignFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">All Callsigns</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button id="clearBtn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md transition">
+                            Clear All Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <p class="text-gray-600 text-sm font-medium">Total Packets</p>
+                    <p class="text-3xl font-bold text-blue-600 mt-2" id="totalPackets">0</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <p class="text-gray-600 text-sm font-medium">Max Altitude</p>
+                    <p class="text-3xl font-bold text-green-600 mt-2" id="maxAltitude">0 m</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <p class="text-gray-600 text-sm font-medium">Avg SNR</p>
+                    <p class="text-3xl font-bold text-orange-600 mt-2" id="avgSnr">0 dB</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <p class="text-gray-600 text-sm font-medium">Unique Callsigns</p>
+                    <p class="text-3xl font-bold text-purple-600 mt-2" id="uniqueCallsigns">0</p>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Altitude Profile</h3>
+                    <canvas id="altitudeChart"></canvas>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Signal-to-Noise Ratio</h3>
+                    <canvas id="snrChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Map -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Flight Path Map</h3>
+                <div id="map" class="rounded-lg border border-gray-200"></div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-900">Packet Details</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Callsign</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frame</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Altitude (m)</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Latitude</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Longitude</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SNR (dB)</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTable" class="divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Global variables
+        let allData = [];
+        let filteredData = [];
+        let map = null;
+        let markers = [];
+        let polyline = null;
+        let altitudeChart = null;
+        let snrChart = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMap();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('loadBtn').addEventListener('click', handleFileLoad);
+            document.getElementById('fileInput').addEventListener('change', handleFileInputChange);
+            document.getElementById('clearBtn').addEventListener('click', clearAllData);
+            document.getElementById('dateFilter').addEventListener('change', applyFilters);
+            document.getElementById('callsignFilter').addEventListener('change', applyFilters);
+            
+            // Collapsible toggle
+            document.getElementById('fileLoadingToggle').addEventListener('click', toggleFileLoading);
+            
+            // Drag and drop
+            const dropZone = document.getElementById('dropZone');
+            dropZone.addEventListener('dragover', e => {
+                e.preventDefault();
+                dropZone.classList.add('bg-blue-100', 'border-blue-500');
+            });
+            dropZone.addEventListener('dragleave', e => {
+                e.preventDefault();
+                dropZone.classList.remove('bg-blue-100', 'border-blue-500');
+            });
+            dropZone.addEventListener('drop', e => {
+                e.preventDefault();
+                dropZone.classList.remove('bg-blue-100', 'border-blue-500');
+                document.getElementById('fileInput').files = e.dataTransfer.files;
+                handleFileInputChange();
+            });
+        }
+
+        function handleFileInputChange() {
+            const fileInput = document.getElementById('fileInput');
+            const fileInputLabel = document.getElementById('fileInputLabel');
+            
+            if (fileInput.files.length > 0) {
+                if (fileInput.files.length === 1) {
+                    fileInputLabel.textContent = fileInput.files[0].name;
+                } else {
+                    fileInputLabel.textContent = `${fileInput.files.length} files selected`;
+                }
+            } else {
+                fileInputLabel.textContent = 'Choose Files';
+            }
+        }
+
+        function toggleFileLoading() {
+            const content = document.getElementById('fileLoadingContent');
+            const icon = document.getElementById('toggleIcon');
+            
+            content.classList.toggle('hidden');
+            icon.style.transform = content.classList.contains('hidden') ? 'rotate(0)' : 'rotate(180deg)';
+        }
+
+        function initializeMap() {
+            map = L.map('map').setView([32, 34.8], 8);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+        }
+
+        async function handleFileLoad() {
+            const files = document.getElementById('fileInput').files;
+            if (files.length === 0) return;
+
+            const fileStatus = document.getElementById('fileStatus');
+            fileStatus.textContent = 'Loading files...';
+            fileStatus.className = 'text-sm text-blue-600';
+
+            allData = [];
+            
+            try {
+                for (let file of files) {
+                    if (!file.name.endsWith('.jsonl') && !file.name.endsWith('.json')) {
+                        console.warn(`Skipping non-JSONL file: ${file.name}`);
+                        continue;
+                    }
+
+                    const text = await file.text();
+                    const lines = text.split('\n');
+                    
+                    for (let line of lines) {
+                        if (line.trim()) {
+                            try {
+                                const packet = JSON.parse(line);
+                                allData.push(packet);
+                            } catch (e) {
+                                console.warn(`Invalid JSON in ${file.name}: ${line.substring(0, 50)}...`);
+                            }
+                        }
+                    }
+                }
+
+                // Sort by logged_at
+                allData.sort((a, b) => {
+                    const dateA = new Date(a.logged_at || 0);
+                    const dateB = new Date(b.logged_at || 0);
+                    return dateA - dateB;
+                });
+
+                fileStatus.textContent = `Loaded ${allData.length} packets from ${files.length} file(s)`;
+                fileStatus.className = 'text-sm text-green-600';
+                
+                applyFilters();
+                updateUI();
+            } catch (error) {
+                fileStatus.textContent = `Error: ${error.message}`;
+                fileStatus.className = 'text-sm text-red-600';
+                console.error('Error loading files:', error);
+            }
+        }
+
+        function clearAllData() {
+            allData = [];
+            filteredData = [];
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileInputLabel').textContent = 'Choose Files';
+            document.getElementById('fileStatus').textContent = '';
+            
+            // Reset filters
+            document.getElementById('dateFilter').value = '';
+            document.getElementById('callsignFilter').value = '';
+            
+            updateUI();
+        }
+
+        function applyFilters() {
+            filteredData = [...allData];
+
+            const dateFilter = document.getElementById('dateFilter').value;
+            const callsignFilter = document.getElementById('callsignFilter').value;
+
+            if (dateFilter) {
+                filteredData = filteredData.filter(packet => {
+                    return packet.logged_at.startsWith(dateFilter);
+                });
+            }
+
+            if (callsignFilter) {
+                filteredData = filteredData.filter(packet => packet.callsign === callsignFilter);
+            }
+
+            updateUI();
+        }
+
+        function updateUI() {
+            updateStatistics();
+            updateCharts();
+            updateMap();
+            updateTable();
+            populateFilters();
+        }
+
+        function updateStatistics() {
+            // Total packets
+            document.getElementById('totalPackets').textContent = filteredData.length;
+
+            // Max altitude
+            const maxAlt = Math.max(...filteredData.map(p => p.altitude || 0), 0);
+            document.getElementById('maxAltitude').textContent = maxAlt.toFixed(0) + ' m';
+
+            // Average SNR
+            const avgSnr = filteredData.length > 0 
+                ? filteredData.reduce((sum, p) => sum + (p.snr || 0), 0) / filteredData.length 
+                : 0;
+            document.getElementById('avgSnr').textContent = avgSnr.toFixed(1) + ' dB';
+
+            // Unique callsigns
+            const uniqueCallsigns = new Set(filteredData.map(p => p.callsign)).size;
+            document.getElementById('uniqueCallsigns').textContent = uniqueCallsigns;
+        }
+
+        function updateCharts() {
+            const ctx1 = document.getElementById('altitudeChart').getContext('2d');
+            const ctx2 = document.getElementById('snrChart').getContext('2d');
+
+            // Destroy existing charts
+            if (altitudeChart) altitudeChart.destroy();
+            if (snrChart) snrChart.destroy();
+
+            const labels = filteredData.map((_, i) => i + 1);
+            const altitudes = filteredData.map(p => p.altitude || 0);
+            const snrs = filteredData.map(p => p.snr || 0);
+
+            altitudeChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Altitude (m)',
+                        data: altitudes,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        tension: 0.1,
+                        fill: true,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#2563eb'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { usePointStyle: true }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Altitude (meters)' }
+                        }
+                    }
+                }
+            });
+
+            snrChart = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'SNR (dB)',
+                        data: snrs,
+                        borderColor: '#f97316',
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        tension: 0.1,
+                        fill: true,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#f97316'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { usePointStyle: true }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'SNR (dB)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateMap() {
+            // Clear existing markers
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+
+            if (polyline) map.removeLayer(polyline);
+
+            if (filteredData.length === 0) return;
+
+            // Create color map for callsigns
+            const uniqueCallsigns = [...new Set(filteredData.map(p => p.callsign))];
+            const colorPalette = [
+                '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
+                '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B88B', '#ABEBC6',
+                '#F5B7B1', '#D7BDE2', '#A9DFBF', '#F9E79F', '#85C1E2'
+            ];
+            
+            const callsignColorMap = {};
+            uniqueCallsigns.forEach((callsign, index) => {
+                callsignColorMap[callsign] = colorPalette[index % colorPalette.length];
+            });
+
+            // Sort by time to create proper path
+            const sortedData = [...filteredData].sort((a, b) => 
+                new Date(a.logged_at) - new Date(b.logged_at)
+            );
+
+            // Group data by callsign for polylines
+            const dataByCallsign = {};
+            sortedData.forEach(packet => {
+                if (!dataByCallsign[packet.callsign]) {
+                    dataByCallsign[packet.callsign] = [];
+                }
+                dataByCallsign[packet.callsign].push(packet);
+            });
+
+            // Add markers and polylines for each callsign
+            Object.entries(dataByCallsign).forEach(([callsign, packets]) => {
+                const color = callsignColorMap[callsign];
+                
+                // Add markers for this callsign
+                packets.forEach((packet, index) => {
+                    const marker = L.circleMarker(
+                        [packet.latitude, packet.longitude],
+                        {
+                            radius: 4,
+                            fillColor: color,
+                            color: color,
+                            weight: 1,
+                            opacity: 0.8,
+                            fillOpacity: 0.7
+                        }
+                    );
+
+                    marker.bindPopup(`
+                        <strong>${packet.callsign}</strong><br>
+                        Altitude: ${packet.altitude.toFixed(0)} m<br>
+                        SNR: ${packet.snr} dB<br>
+                        Time: ${packet.time}<br>
+                        Freq: ${packet.freq}
+                    `);
+
+                    marker.addTo(map);
+                    markers.push(marker);
+                });
+
+                // Draw flight path for this callsign
+                const latlngs = packets.map(p => [p.latitude, p.longitude]);
+                if (latlngs.length > 1) {
+                    const line = L.polyline(latlngs, {
+                        color: color,
+                        weight: 2,
+                        opacity: 0.7
+                    }).addTo(map);
+                }
+            });
+
+            // Add legend
+            addMapLegend(callsignColorMap);
+
+            // Fit map to bounds
+            if (markers.length > 0) {
+                const group = new L.featureGroup(markers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+        }
+
+        function addMapLegend(callsignColorMap) {
+            // Remove existing legend if present
+            const existingLegend = document.querySelector('.map-legend');
+            if (existingLegend) {
+                existingLegend.remove();
+            }
+
+            // Create legend
+            const legend = document.createElement('div');
+            legend.className = 'map-legend';
+            legend.style.cssText = `
+                position: absolute;
+                bottom: 10px;
+                right: 10px;
+                background-color: white;
+                padding: 10px 15px;
+                border-radius: 5px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                font-size: 12px;
+                max-height: 200px;
+                overflow-y: auto;
+                z-index: 1000;
+            `;
+
+            let legendHTML = '<strong style="display: block; margin-bottom: 8px;">Callsigns</strong>';
+            
+            Object.entries(callsignColorMap).forEach(([callsign, color]) => {
+                legendHTML += `
+                    <div style="margin: 4px 0; display: flex; align-items: center;">
+                        <div style="width: 12px; height: 12px; background-color: ${color}; border-radius: 50%; margin-right: 8px; border: 1px solid ${color};"></div>
+                        <span>${callsign}</span>
+                    </div>
+                `;
+            });
+
+            legend.innerHTML = legendHTML;
+            document.getElementById('map').appendChild(legend);
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById('dataTable');
+            tbody.innerHTML = '';
+
+            filteredData.forEach(packet => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${packet.callsign}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${packet.frame.toFixed(0)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${packet.altitude.toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${packet.latitude.toFixed(5)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${packet.longitude.toFixed(5)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${packet.snr}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${packet.freq}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${packet.time}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function populateFilters() {
+            // Populate date filter
+            const dates = [...new Set(allData.map(p => p.logged_at.split('T')[0]))].sort().reverse();
+            const dateSelect = document.getElementById('dateFilter');
+            const currentDateValue = dateSelect.value;
+            dateSelect.innerHTML = '<option value="">All Dates</option>';
+            dates.forEach(date => {
+                const option = document.createElement('option');
+                option.value = date;
+                option.textContent = date;
+                dateSelect.appendChild(option);
+            });
+            dateSelect.value = currentDateValue;
+
+            // Populate callsign filter
+            const callsigns = [...new Set(allData.map(p => p.callsign))].sort();
+            const callsignSelect = document.getElementById('callsignFilter');
+            const currentCallsignValue = callsignSelect.value;
+            callsignSelect.innerHTML = '<option value="">All Callsigns</option>';
+            callsigns.forEach(callsign => {
+                const option = document.createElement('option');
+                option.value = callsign;
+                option.textContent = callsign;
+                callsignSelect.appendChild(option);
+            });
+            callsignSelect.value = currentCallsignValue;
+        }
+    </script>
+</body>
+</html>
