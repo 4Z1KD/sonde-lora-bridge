@@ -60,13 +60,13 @@ class SondeLoraClient:
                     valid_source_device = False
             
             # Ignore this packet if both filters do not match
-            if not valid_channel and not valid_source_device:
-                return  
-            
+            if ((self.channel and not valid_channel) or (self.source_device_id and not valid_source_device)):
+                return
+
             # Check if packet has text content (hex-encoded CBOR data)
             if "decoded" in packet and "text" in packet["decoded"]:
                 text_payload = packet["decoded"]["text"]
-                print(f"\nText message received: {text_payload}")
+                print(f"Text message received: {text_payload}")
                 
                 # Try to decode as hex CBOR
                 try:
