@@ -359,27 +359,71 @@
             if (altitudeChart) altitudeChart.destroy();
             if (snrChart) snrChart.destroy();
 
-            const labels = filteredData.map((_, i) => i + 1);
-            const altitudes = filteredData.map(p => p.altitude || 0);
-            const snrs = filteredData.map(p => p.snr || 0);
+            // Create color palette
+            const colorPalette = [
+                '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
+                '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B88B', '#ABEBC6',
+                '#F5B7B1', '#D7BDE2', '#A9DFBF', '#F9E79F', '#85C1E2'
+            ];
 
+            // Group data by callsign
+            const dataByCallsign = {};
+            filteredData.forEach(packet => {
+                if (!dataByCallsign[packet.callsign]) {
+                    dataByCallsign[packet.callsign] = [];
+                }
+                dataByCallsign[packet.callsign].push(packet);
+            });
+
+            // Create datasets for each callsign
+            const callsigns = Object.keys(dataByCallsign).sort();
+            const altitudeDatasets = [];
+            const snrDatasets = [];
+
+            callsigns.forEach((callsign, index) => {
+                const color = colorPalette[index % colorPalette.length];
+                const packets = dataByCallsign[callsign];
+                
+                // Altitude dataset
+                altitudeDatasets.push({
+                    label: callsign,
+                    data: packets.map(p => p.altitude || 0),
+                    borderColor: color,
+                    backgroundColor: color + '20',
+                    tension: 0.1,
+                    fill: false,
+                    pointRadius: 3,
+                    pointBackgroundColor: color,
+                    borderWidth: 2
+                });
+
+                // SNR dataset
+                snrDatasets.push({
+                    label: callsign,
+                    data: packets.map(p => p.snr || 0),
+                    borderColor: color,
+                    backgroundColor: color + '20',
+                    tension: 0.1,
+                    fill: false,
+                    pointRadius: 3,
+                    pointBackgroundColor: color,
+                    borderWidth: 2
+                });
+            });
+
+            // Altitude chart
             altitudeChart = new Chart(ctx1, {
                 type: 'line',
                 data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Altitude (m)',
-                        data: altitudes,
-                        borderColor: '#2563eb',
-                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                        tension: 0.1,
-                        fill: true,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#2563eb'
-                    }]
+                    labels: filteredData.map((_, i) => i + 1),
+                    datasets: altitudeDatasets
                 },
                 options: {
                     responsive: true,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
                     plugins: {
                         legend: {
                             display: true,
@@ -395,23 +439,19 @@
                 }
             });
 
+            // SNR chart
             snrChart = new Chart(ctx2, {
                 type: 'line',
                 data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'SNR (dB)',
-                        data: snrs,
-                        borderColor: '#f97316',
-                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
-                        tension: 0.1,
-                        fill: true,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#f97316'
-                    }]
+                    labels: filteredData.map((_, i) => i + 1),
+                    datasets: snrDatasets
                 },
                 options: {
                     responsive: true,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
                     plugins: {
                         legend: {
                             display: true,
