@@ -340,9 +340,10 @@
             const maxAlt = Math.max(...filteredData.map(p => p.altitude || 0), 0);
             document.getElementById('maxAltitude').textContent = maxAlt.toFixed(0) + ' m';
 
-            // Average SNR
-            const avgSnr = filteredData.length > 0 
-                ? filteredData.reduce((sum, p) => sum + (p.snr || 0), 0) / filteredData.length 
+            // Average SNR (excluding IMET)
+            const nonImetData = filteredData.filter(p => !(p.model && p.model.toUpperCase().includes('IMET')) && !(p.subtype && p.subtype.toUpperCase().includes('IMET')));
+            const avgSnr = nonImetData.length > 0 
+                ? nonImetData.reduce((sum, p) => sum + (p.snr || 0), 0) / nonImetData.length 
                 : 0;
             document.getElementById('avgSnr').textContent = avgSnr.toFixed(1) + ' dB';
 
@@ -375,8 +376,12 @@
                 dataByCallsign[packet.callsign].push(packet);
             });
 
-            // Create datasets for each callsign
+            // Find maximum packet count among all callsigns
             const callsigns = Object.keys(dataByCallsign).sort();
+            const maxPackets = Math.max(...callsigns.map(cs => dataByCallsign[cs].length), 1);
+            const labels = Array.from({length: maxPackets}, (_, i) => i + 1);
+
+            // Create datasets for each callsign
             const altitudeDatasets = [];
             const snrDatasets = [];
 
@@ -397,25 +402,28 @@
                     borderWidth: 2
                 });
 
-                // SNR dataset
-                snrDatasets.push({
-                    label: callsign,
-                    data: packets.map(p => p.snr || 0),
-                    borderColor: color,
-                    backgroundColor: color + '20',
-                    tension: 0.1,
-                    fill: false,
-                    pointRadius: 3,
-                    pointBackgroundColor: color,
-                    borderWidth: 2
-                });
+                // SNR dataset (exclude IMET)
+                const isImet = packets.some(p => (p.model && p.model.toUpperCase().includes('IMET')) || (p.subtype && p.subtype.toUpperCase().includes('IMET')));
+                if (!isImet) {
+                    snrDatasets.push({
+                        label: callsign,
+                        data: packets.map(p => p.snr || 0),
+                        borderColor: color,
+                        backgroundColor: color + '20',
+                        tension: 0.1,
+                        fill: false,
+                        pointRadius: 3,
+                        pointBackgroundColor: color,
+                        borderWidth: 2
+                    });
+                }
             });
 
             // Altitude chart
             altitudeChart = new Chart(ctx1, {
                 type: 'line',
                 data: {
-                    labels: filteredData.map((_, i) => i + 1),
+                    labels: labels,
                     datasets: altitudeDatasets
                 },
                 options: {
@@ -443,7 +451,7 @@
             snrChart = new Chart(ctx2, {
                 type: 'line',
                 data: {
-                    labels: filteredData.map((_, i) => i + 1),
+                    labels: labels,
                     datasets: snrDatasets
                 },
                 options: {
