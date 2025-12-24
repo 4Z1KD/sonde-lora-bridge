@@ -66,14 +66,14 @@ class SondeLoraClient:
             # Check if packet has text content (hex-encoded CBOR data)
             if "decoded" in packet and "text" in packet["decoded"]:
                 text_payload = packet["decoded"]["text"]
-                print(f"Text message received: {text_payload}")
                 
                 # Try to decode as hex CBOR
                 try:
                     cbor_bytes = bytes.fromhex(text_payload)
                     decoded_data = self.optimizer.from_cbor2(cbor_bytes)
                     
-                    print("\n" + "="*50)
+                    print(f"Text message received: {text_payload}\n")
+                    print("="*50)
                     print("SONDE DATA RECEIVED")
                     print("="*50)
                     print(json.dumps(decoded_data, indent=2))
@@ -83,7 +83,8 @@ class SondeLoraClient:
                     self.packet_logger.log_packet(decoded_data)
                     
                 except Exception as e:
-                    print(f"Could not decode as CBOR: {e}")
+                    pass
+                    #print(f"Could not decode as CBOR: {e}")
         
         except Exception as e:
             print(f"Error processing received packet: {e}")
