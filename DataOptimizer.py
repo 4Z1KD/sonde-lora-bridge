@@ -8,36 +8,36 @@ class DataOptimizer:
     Supports both JSON and CBOR2 encoding formats.
     """
     
-    # Mapping of full field names to shortened keys (as integers)
-    FIELD_MAPPING = {
-    "type": 0, 
-    "station": 1,
-    "callsign": 2,
-    "latitude": 3,
-    "longitude": 4,
-    "altitude": 5, 
-    "speed": 6, 
-    "heading": 7, 
-    "time": 8, 
-    "comment": 9,
-    "model": 10,
-    "freq": 11,
-    "temp": 12, 
-    "frame": 13, 
-    "humidity": 14, 
-    "pressure": 15, 
-    "sats": 16, 
-    "batt": 17, 
-    "sdr_device_idx": 18, 
-    "vel_v": 19, 
-    "vel_h": 20,
-    "bt": 21, 
-    "snr": 22,
-    "subtype": 23
+    # Combined field configuration with mapping and scaling
+    FIELD_CONFIG = {
+        "type": {"key": 0, "scale": 1},
+        "station": {"key": 1, "scale": 1},
+        "callsign": {"key": 2, "scale": 1},
+        "latitude": {"key": 3, "scale": 1e5},
+        "longitude": {"key": 4, "scale": 1e5},
+        "altitude": {"key": 5, "scale": 1},
+        "speed": {"key": 6, "scale": 1e2},
+        "heading": {"key": 7, "scale": 1e5},
+        "time": {"key": 8, "scale": 1},
+        "comment": {"key": 9, "scale": 1},
+        "model": {"key": 10, "scale": 1},
+        "freq": {"key": 11, "scale": 1},
+        "temp": {"key": 12, "scale": 10},
+        "frame": {"key": 13, "scale": 1},
+        "humidity": {"key": 14, "scale": 10},
+        "pressure": {"key": 15, "scale": 10},
+        "sats": {"key": 16, "scale": 1},
+        "batt": {"key": 17, "scale": 10},
+        "sdr_device_idx": {"key": 18, "scale": 1},
+        "vel_v": {"key": 19, "scale": 10},
+        "vel_h": {"key": 20, "scale": 10},
+        "bt": {"key": 21, "scale": 1},
+        "snr": {"key": 22, "scale": 10},
+        "subtype": {"key": 23, "scale": 1}
     }
     
-    # Reverse mapping for decoding
-    REVERSE_MAPPING = {v: k for k, v in FIELD_MAPPING.items()}
+    # Reverse mapping: key -> field_name
+    REVERSE_KEY_MAPPING = {config["key"]: name for name, config in FIELD_CONFIG.items()}
     
     def __init__(self):
         """Initialize the data optimizer."""
@@ -59,8 +59,8 @@ class DataOptimizer:
         
         optimized = {}
         for key, value in data.items():
-            short_key = self.FIELD_MAPPING.get(key, key)
-            optimized[short_key] = self._minimize_value(value)
+            short_key = self.FIELD_CONFIG[key]["key"] if key in self.FIELD_CONFIG else key
+            optimized[short_key] = self._minimize_value(value, key)
         
         return optimized
     
@@ -104,12 +104,13 @@ class DataOptimizer:
         optimized = cbor2.loads(cbor_bytes)
         return self.decode_json(optimized)
     
-    def _minimize_value(self, value):
+    def _minimize_value(self, value, field_name=None):
         """
-        Minimize values for transmission.
+        Minimize values for transmission using per-field scaling factors.
         
         Args:
             value: Value to minimize.
+            field_name: Name of the field (used to look up scaling factor).
             
         Returns:
             Minimized value.
@@ -121,14 +122,18 @@ class DataOptimizer:
             # Keep strings as-is
             return value
         elif isinstance(value, (int, float)):
-            # Round floats to reasonable precision
-            return int(value * 100000)
+            # Apply field-specific scaling factor
+            if field_name and field_name in self.FIELD_CONFIG:
+                scale = self.FIELD_CONFIG[field_name]["scale"]
+            else:
+                scale = 1  # No scaling for fields not in FIELD_CONFIG
+            return int(value * scale)
         elif isinstance(value, list):
             # Minimize list values
-            return [self._minimize_value(v) for v in value]
+            return [self._minimize_value(v, field_name) for v in value]
         elif isinstance(value, dict):
             # Recursively minimize nested dicts
-            return {self.FIELD_MAPPING.get(k, k): self._minimize_value(v) 
+            return {self.FIELD_CONFIG[k]["key"] if k in self.FIELD_CONFIG else k: self._minimize_value(v, k) 
                     for k, v in value.items()}
         return value
     
@@ -144,30 +149,33 @@ class DataOptimizer:
         """
         decoded = {}
         for short_key, value in optimized_data.items():
-            full_key = self.REVERSE_MAPPING.get(short_key, short_key)
-            decoded[full_key] = self._restore_value(value)
+            full_key = self.REVERSE_KEY_MAPPING.get(short_key, short_key)
+            decoded[full_key] = self._restore_value(value, full_key)
         return decoded
     
-    def _restore_value(self, value):
+    def _restore_value(self, value, field_name=None):
         """
-        Restore values from optimized format.
+        Restore values from optimized format using per-field scaling factors.
         
         Args:
             value: Value to restore.
+            field_name: Name of the field (used to look up scaling factor).
             
         Returns:
             Restored value.
         """
         if isinstance(value, int):
-            if value == 0:
-                # Ambiguous: could be boolean or number, keep as int
-                return value
+            # Restore using field-specific scaling factor
+            if field_name and field_name in self.FIELD_CONFIG:
+                scale = self.FIELD_CONFIG[field_name]["scale"]
+                val = value / scale if scale != 0 else value
+                return val if scale != 1 else int(val)
             else:
-                return value/100000
+                return value  # No scaling to remove
         elif isinstance(value, list):
-            return [self._restore_value(v) for v in value]
+            return [self._restore_value(v, field_name) for v in value]
         elif isinstance(value, dict):
-            return {self.REVERSE_MAPPING.get(k, k): self._restore_value(v) 
+            return {self.REVERSE_KEY_MAPPING.get(k, k): self._restore_value(v, self.REVERSE_KEY_MAPPING.get(k, k)) 
                     for k, v in value.items()}
         return value
 
@@ -182,22 +190,23 @@ if __name__ == "__main__":
     "latitude": 31.87804, 
     "longitude": 34.74142, 
     "altitude": 4523, 
-    "speed": -35996.4, 
+    "speed": 120.4, 
     "heading": -9999.0, 
     "time": "17:39:04", 
     "comment": "Radiosonde", 
     "model": "IMET", 
     "freq": "403.9970 MHz", 
-    "temp": -5.18, 
+    "temp": -5.1, 
     "frame": 1715, 
     "humidity": 4.1, 
     "pressure": 590.5, 
     "sats": 12, 
     "batt": 5.2, 
     "sdr_device_idx": "00000001", 
-    "vel_v": -9999.0, 
-    "vel_h": -9999.0,
+    "vel_v": 30.4, 
+    "vel_h": -4.1,
     }
+    
     
     # Optimize to JSON
     '''
