@@ -2,7 +2,7 @@ import requests
 import json
 from datetime import datetime, timezone
 from ConfigLoader import ConfigLoader
-
+from rich.console import Console
 
 class SondeHubClient:
     """
@@ -103,6 +103,7 @@ class SondeHubClient:
             "latitude": "lat",
             "longitude": "lon",
             "altitude": "alt",
+            "freq": "frequency",
         }
         
         # Apply field mappings to decoded_packet
@@ -126,16 +127,22 @@ class SondeHubClient:
         # Normalize type field: IMET -> iMet (case insensitive)
         if "type" in telemetry and telemetry["type"].upper() == "IMET":
             telemetry["type"] = "iMet"
+            if "subtype" in telemetry and "IMET" in telemetry["subtype"].upper():
+                telemetry["type"] = telemetry["subtype"]
+        if "serial" in telemetry and "IMET-" in telemetry["serial"].upper():
+                telemetry["serial"] = telemetry["serial"].upper().replace("IMET-", "")
 
         # Telemetry fields
         telemetry_fields = [
-            "frame", "freq", "temp", "humidity", "pressure",
+            "frame", "frequency", "temp", "humidity", "pressure",
             "vel_h", "vel_v", "heading", "batt", "sats",
             "xdata", "snr", "rssi"
         ]
         for field in telemetry_fields:
             if field in mapped_packet:
                 telemetry[field] = mapped_packet[field]
+        if "frequency" in telemetry and "MHZ" in telemetry["frequency"].upper():
+                telemetry["frequency"] = float(telemetry["frequency"].replace("MHz", ""))
 
         # Uploader information
         if self.uploader_position:
@@ -143,7 +150,8 @@ class SondeHubClient:
         if self.uploader_antenna:
             telemetry["uploader_antenna"] = self.uploader_antenna
         
-        print(json.dumps(telemetry, indent=2))
+        console = Console()
+        console.print_json(data=telemetry)
         return telemetry
 
 if __name__ == "__main__":
@@ -151,46 +159,33 @@ if __name__ == "__main__":
     client = SondeHubClient()
     
     # Create sample decoded packet
-    api_sample_packet = {
-        "dev": "string",
-        "type": "RS41",
-        "serial": "W3610141",
-        "datetime": "2025-12-25T20:43:44.964Z",
-        "lat": 32.820282,
-        "lon": 35.594825,
-        "alt": 1000,
-    }
     test_sample_packet = {
-        "type": "PAYLOAD_SUMMARY",
-        "station": "4Z1KD",
-        "callsign": "W4944862",
-        "latitude": 31.99835,
-        "longitude": 34.82983,
-        "altitude": 2391.92038,
-        "speed": 7.381908000000001,
-        "heading": 126.88162,
-        "time": "2025-12-26T11:24:07",
-        "comment": "Radiosonde",
-        "model": "RS41-SGP",
-        "freq": "405.3010 MHz",
-        "temp": 0.9,
-        "frame": 1308,
-        "bt": 65535,
-        "pressure": 761.26,
-        "sats": 10,
-        "batt": 2.9,
-        "snr": 18.9,
-        "fest": [
-            -2250,
-            2550
+        "dev": "slb-001",
+        "software_name": "sonde-lora-bridge",
+        "software_version": "1.0",
+        "uploader_callsign": "LORA-B",
+        "datetime": "2025-12-26T19:09:29",
+        "lat": 31.52192,
+        "lon": 36.29161,
+        "alt": 6492,
+        "type": "iMet-4",
+        "serial": "F803BCAD",
+        "subtype": "iMet-4",
+        "frame": 6320,
+        "frequency": 404.0,
+        "temp": -24.1,
+        "humidity": 13.9,
+        "pressure": 449.1,
+        "batt": 3.8,
+        "sats": 12,
+        "snr": "",
+        "uploader_position": [
+            32.9127,
+            35.5976,
+            0
         ],
-        "f_centre": 405301150,
-        "ppm": 349.1111111111111,
-        "subtype": "RS41-SGP",
-        "sdr_device_idx": "0",
-        "vel_v": 6.4233,
-        "vel_h": 2.05053
-    }
+        "uploader_antenna": "vertical"
+        }
     
     print("Testing SondeHubClient...")
     print(f"SondeHub enabled: {client.enabled}")

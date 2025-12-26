@@ -1,5 +1,5 @@
 from DataOptimizer import DataOptimizer
-import json
+from rich.console import Console
 
 # Create optimizer instance
 optimizer = DataOptimizer()
@@ -26,8 +26,8 @@ while True:
         # Decode from CBOR2 back to JSON
         decoded = optimizer.from_cbor2(cbor_bytes)
         
-        print("\nDecoded JSON:")
-        print(json.dumps(decoded, indent=2))
+        print("\nDecoded JSON:")        
+        Console().print_json(data=decoded)
         print()
     except ValueError:
         print("Invalid hex string. Please enter a valid hexadecimal string.\n")
