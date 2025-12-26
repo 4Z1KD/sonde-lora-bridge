@@ -13,5 +13,11 @@
     "meshtastic_port": "COM2",
     "source_device_id": "!abcdefgh",
     "channel": 1
+  },
+  "sondeHub": {
+    "enabled": false,
+    "uploader_callsign": "N0CALL",
+    "uploader_position": [0.0, 0.0, 0],
+    "uploader_antenna": "1/4 wave vertical"
   }
 }

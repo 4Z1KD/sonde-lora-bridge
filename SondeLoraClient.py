@@ -1,6 +1,7 @@
 from MeshtasticClient import MeshtasticClient
 from DataOptimizer import DataOptimizer
 from PacketLogger import PacketLogger
+from SondeHubClient import SondeHubClient
 from ConfigLoader import ConfigLoader
 import json
 import time
@@ -31,8 +32,9 @@ class SondeLoraClient:
             receive_callback=self.on_message_received
         )
         
-        # Initialize packet logger
+        # Initialize packet logger and SondeHub client
         self.packet_logger = PacketLogger()
+        self.sondehub_client = SondeHubClient()
     
     def on_message_received(self, packet):
         """
@@ -81,7 +83,10 @@ class SondeLoraClient:
                     
                     # Log the decoded packet
                     self.packet_logger.log_packet(decoded_data)
-                    
+
+                    # Send to SondeHub
+                    self.sondehub_client.send_packet(decoded_data)
+
                 except Exception as e:
                     pass
                     #print(f"Could not decode as CBOR: {e}")

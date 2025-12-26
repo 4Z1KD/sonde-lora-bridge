@@ -33,7 +33,8 @@ class DataOptimizer:
         "vel_h": {"key": 20, "scale": 10},
         "bt": {"key": 21, "scale": 1},
         "snr": {"key": 22, "scale": 10},
-        "subtype": {"key": 23, "scale": 1}
+        "subtype": {"key": 23, "scale": 1},
+        "manufacturer": {"key": 24, "scale": 1}        
     }
     
     # Reverse mapping: key -> field_name
