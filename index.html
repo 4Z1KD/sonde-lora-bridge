@@ -147,6 +147,18 @@ Meshtastic Client ──► Mesh Network
           </ul>
         </div>
 
+        <div class="bg-gradient-to-b from-cyan-400 to-cyan-450 rounded-xl p-6 shadow-lg border border-cyan-300/5 hover:shadow-xl hover:-translate-y-1 transition-all">
+          <h3 class="text-xl font-semibold mb-2 text-gray-700 flex items-center gap-3"><i class="fas fa-cloud-upload-alt text-xl flex-shrink-0"></i>SondeHub Client</h3>
+          <p class="text-gray-800 text-sm mb-3">
+            Packs data in SondeHub packet format and sends it to the server through the API.
+          </p>
+          <ul class="mt-2 ml-5 text-gray-200 text-xs space-y-1 list-disc">
+            <li>Formats packets according to SondeHub specifications</li>
+            <li>Transmits data to SondeHub API endpoint</li>
+            <li>Handles API communication and responses</li>
+          </ul>
+        </div>
+
       </div>
     </section>
 
@@ -160,10 +172,10 @@ Mesh Network Source
 Meshtastic Client
    │
    ▼
-Data Optimizer (JSON / CBOR2)
+Data Optimizer (JSON / CBOR2) ──► SondeHub Client (API)
    │
    ▼
-Output Data
+Data Logger
         </code>
       </div>
     </section>
