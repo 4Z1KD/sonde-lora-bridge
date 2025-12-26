@@ -123,6 +123,10 @@ class SondeHubClient:
             if field in mapped_packet:
                 telemetry[field] = mapped_packet[field]
 
+        # Normalize type field: IMET -> iMet (case insensitive)
+        if "type" in telemetry and telemetry["type"].upper() == "IMET":
+            telemetry["type"] = "iMet"
+
         # Telemetry fields
         telemetry_fields = [
             "frame", "freq", "temp", "humidity", "pressure",
