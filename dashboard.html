@@ -102,7 +102,7 @@
             </div>
 
             <!-- Statistics -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
                 <div class="bg-white rounded-lg shadow p-6">
                     <p class="text-gray-600 text-sm font-medium">Total Packets</p>
                     <p class="text-3xl font-bold text-blue-600 mt-2" id="totalPackets">0</p>
@@ -112,12 +112,20 @@
                     <p class="text-3xl font-bold text-green-600 mt-2" id="maxAltitude">0 m</p>
                 </div>
                 <div class="bg-white rounded-lg shadow p-6">
+                    <p class="text-gray-600 text-sm font-medium">Unique Callsigns</p>
+                    <p class="text-3xl font-bold text-purple-600 mt-2" id="uniqueCallsigns">0</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <p class="text-gray-600 text-sm font-medium">Min SNR</p>
+                    <p class="text-3xl font-bold text-yellow-600 mt-2" id="minSnr">0 dB</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
                     <p class="text-gray-600 text-sm font-medium">Avg SNR</p>
                     <p class="text-3xl font-bold text-orange-600 mt-2" id="avgSnr">0 dB</p>
                 </div>
                 <div class="bg-white rounded-lg shadow p-6">
-                    <p class="text-gray-600 text-sm font-medium">Unique Callsigns</p>
-                    <p class="text-3xl font-bold text-purple-600 mt-2" id="uniqueCallsigns">0</p>
+                    <p class="text-gray-600 text-sm font-medium">Max SNR</p>
+                    <p class="text-3xl font-bold text-red-600 mt-2" id="maxSnr">0 dB</p>
                 </div>
             </div>
 
@@ -343,10 +351,19 @@
 
             // Average SNR (excluding IMET)
             const nonImetData = filteredData.filter(p => !(p.model && p.model.toUpperCase().includes('IMET')) && !(p.subtype && p.subtype.toUpperCase().includes('IMET')));
+            const snrValues = nonImetData.map(p => p.snr || 0);
             const avgSnr = nonImetData.length > 0 
-                ? nonImetData.reduce((sum, p) => sum + (p.snr || 0), 0) / nonImetData.length 
+                ? snrValues.reduce((sum, snr) => sum + snr, 0) / snrValues.length 
                 : 0;
             document.getElementById('avgSnr').textContent = avgSnr.toFixed(1) + ' dB';
+
+            // Max SNR
+            const maxSnr = snrValues.length > 0 ? Math.max(...snrValues) : 0;
+            document.getElementById('maxSnr').textContent = maxSnr.toFixed(1) + ' dB';
+
+            // Min SNR
+            const minSnr = snrValues.length > 0 ? Math.min(...snrValues) : 0;
+            document.getElementById('minSnr').textContent = minSnr.toFixed(1) + ' dB';
 
             // Unique callsigns
             const uniqueCallsigns = new Set(filteredData.map(p => p.callsign)).size;
