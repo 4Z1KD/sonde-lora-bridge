@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 import json
 import threading
 import time
+from datetime import datetime, date
 
 
 class SondeLoraBridge:
@@ -131,16 +132,11 @@ class SondeLoraBridge:
             
             # Convert time from data to ISO format
             time_value = data.get("time", "")
-            if time_value:
-                try:
-                    # Try to parse as Unix timestamp
-                    timestamp = float(time_value)
-                    time_iso = datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat().replace("+00:00", "Z")
-                except (ValueError, TypeError):
-                    # If not a timestamp, use as-is
-                    time_iso = time_value
-            else:
-                time_iso = ""
+            dt = datetime.combine(
+            date.today(),
+            datetime.strptime(time_value, "%H:%M:%S").time()
+            )
+            time_iso = dt.isoformat()
 
             # Create minimal DTO from JSON fields
             dto = {
