@@ -126,7 +126,21 @@ class SondeLoraBridge:
                 print(f"Unsupported packet type: {data.get('type')}")
                 return
             
+            # Add timestamp
             now_iso = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            
+            # Convert time from data to ISO format
+            time_value = data.get("time", "")
+            if time_value:
+                try:
+                    # Try to parse as Unix timestamp
+                    timestamp = float(time_value)
+                    time_iso = datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat().replace("+00:00", "Z")
+                except (ValueError, TypeError):
+                    # If not a timestamp, use as-is
+                    time_iso = time_value
+            else:
+                time_iso = ""
 
             # Create minimal DTO from JSON fields
             dto = {
@@ -138,7 +152,7 @@ class SondeLoraBridge:
             "altitude": data.get("altitude", ""),
             #"speed": data.get("speed", ""),
             #"heading": data.get("heading", ""),
-            "time": data.get("time", ""),
+            "time": time_iso,
             #"comment": data.get("comment", ""),
             "model": data.get("model", ""),
             "freq": data.get("freq", ""),
