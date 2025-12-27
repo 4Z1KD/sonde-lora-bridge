@@ -161,6 +161,7 @@ class SondeLoraBridge:
             "pressure": data.get("pressure", ""),
             "sats": data.get("sats", ""),
             "batt": data.get("batt", ""),
+            "subtype": data.get("subtype", ""),
             #"speed": data.get("speed", ""),
             #"heading": data.get("heading", ""),
             #"comment": data.get("comment", ""),
@@ -168,7 +169,6 @@ class SondeLoraBridge:
             #"vel_v": data.get("vel_v", ""),
             #"vel_h": data.get("vel_h", ""),
             #"bt": data.get("bt", ""),             
-            #"subtype": data.get("subtype", ""),
             }
             
             # Convert DTO to CBOR2
