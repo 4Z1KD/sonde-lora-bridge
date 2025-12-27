@@ -138,6 +138,10 @@ class SondeLoraBridge:
             )
             time_iso = dt.isoformat()
 
+            freq_value = data.get("freq", "")
+            if "MHZ" in freq_value.upper():
+                freq_value = float(freq_value.replace("MHz", ""))
+
             # Create minimal DTO from JSON fields
             dto = {
             #"type": data.get("type", ""),
@@ -150,7 +154,7 @@ class SondeLoraBridge:
             "latitude": data.get("latitude", ""),
             "longitude": data.get("longitude", ""),
             "altitude": data.get("altitude", ""),
-            "freq": data.get("freq", ""),            
+            "freq": freq_value,            
             "snr": data.get("snr", ""),
             "temp": data.get("temp", ""),            
             "humidity": data.get("humidity", ""),

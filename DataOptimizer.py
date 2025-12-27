@@ -21,7 +21,7 @@ class DataOptimizer:
         "time": {"key": 8, "scale": 1},
         "comment": {"key": 9, "scale": 1},
         "model": {"key": 10, "scale": 1},
-        "freq": {"key": 11, "scale": 1},
+        "freq": {"key": 11, "scale": 1e3},
         "temp": {"key": 12, "scale": 10},
         "frame": {"key": 13, "scale": 1},
         "humidity": {"key": 14, "scale": 10},
