@@ -51,8 +51,7 @@ LEAFLET_HTML = """
 
   const callsignColors = {};
   const tracks = {};
-
-  // One layer group for ALL markers
+  const lastBalloon = {};
   const markerLayer = L.layerGroup().addTo(map);
 
   function colorFromCallsign(callsign) {
@@ -64,6 +63,32 @@ LEAFLET_HTML = """
     return `hsl(${hue}, 80%, 50%)`;
   }
 
+  function balloonIcon(color) {
+    const svg = `
+      <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="32"
+      height="32"
+      viewBox="0 0 24 24"
+      fill="${color}"
+      stroke="#000000"
+      stroke-width="1.25"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M14 8a2 2 0 0 0 -2 -2" />
+      <path d="M6 8a6 6 0 1 1 12 0c0 4.97 -2.686 9 -6 9s-6 -4.03 -6 -9" />
+      <path d="M12 17v1a2 2 0 0 1 -2 2h-3a2 2 0 0 0 -2 2" />
+    </svg>
+    `;
+    return L.divIcon({
+      html: svg,
+      className: "",
+      iconSize: [24, 36],
+      iconAnchor: [12, 36]
+    });
+  }
+
   function addPacket(callsign, lat, lon, label) {
     if (!callsign) callsign = "UNKNOWN";
 
@@ -73,18 +98,29 @@ LEAFLET_HTML = """
 
     const color = callsignColors[callsign];
 
-    // Marker
-    L.circleMarker([lat, lon], {
-      radius: 2,
-      color: color,
-      weight: 1,
-      fillColor: color,
-      fillOpacity: 0.6
+    // Convert previous balloon to a circle
+    if (callsign in lastBalloon) {
+      const old = lastBalloon[callsign];
+      L.circleMarker(old.getLatLng(), {
+        radius: 2,
+        color: color,
+        weight: 1,
+        fillColor: color,
+        fillOpacity: 0.6
+      }).addTo(markerLayer);
+      markerLayer.removeLayer(old);
+    }
+
+    // New balloon marker
+    const balloon = L.marker([lat, lon], {
+      icon: balloonIcon(color)
     })
     .bindPopup(label)
     .addTo(markerLayer);
 
-    // Track
+    lastBalloon[callsign] = balloon;
+
+    // Track line
     if (!(callsign in tracks)) {
       tracks[callsign] = L.polyline([], {
         color: color,
@@ -99,17 +135,15 @@ LEAFLET_HTML = """
   }
 
   function clearTracks() {
-    // Remove all markers
     markerLayer.clearLayers();
 
-    // Remove all polylines
     for (const cs in tracks) {
       map.removeLayer(tracks[cs]);
     }
 
-    // Reset state
     for (const cs in tracks) delete tracks[cs];
     for (const cs in callsignColors) delete callsignColors[cs];
+    for (const cs in lastBalloon) delete lastBalloon[cs];
   }
 
   window.addPacket = addPacket;
@@ -118,6 +152,7 @@ LEAFLET_HTML = """
 </body>
 </html>
 """
+
 
 
 
