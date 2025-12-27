@@ -1,6 +1,10 @@
 # 🎈 SondeLoraBridge 🖧
 
-SondeLoraBridge forwards radiosonde telemetry packets over LoRa (Meshtastic)
+forwards radiosonde telemetry packets over LoRa (Meshtastic)
+
+🌐[website](https://4z1kd.github.io/sonde-lora-bridge/)
+
+💻[dashboard](https://4z1kd.github.io/sonde-lora-bridge/dashboard.html)
 
 ---
 
