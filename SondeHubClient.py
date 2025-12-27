@@ -141,9 +141,6 @@ class SondeHubClient:
         for field in telemetry_fields:
             if field in mapped_packet:
                 telemetry[field] = mapped_packet[field]
-        # consider removing as this was fixed in SondeLoraBridge.py
-        if "frequency" in telemetry and "MHZ" in telemetry["frequency"].upper():
-                telemetry["frequency"] = float(telemetry["frequency"].replace("MHz", ""))
 
         # Uploader information
         if self.uploader_position:
