@@ -13,7 +13,7 @@ class SondeLoraClient:
     sonde packets, then decodes and displays them.
     """
 
-    def __init__(self, port=None, channel=None, source_device_id=None):
+    def __init__(self, port=None, channel=None, source_device_id=None, on_sonde_packet=None):
         """
         Initialize the sonde client.
         
@@ -24,6 +24,9 @@ class SondeLoraClient:
             source_device_id (int or str): Specific source device ID to listen to. 
                                         If None, listens to all sources.
         """
+        # Callback for when a sonde packet is received
+        self.on_sonde_packet = on_sonde_packet
+
         self.optimizer = DataOptimizer()
         self.channel = channel
         self.source_device_id = source_device_id
@@ -86,6 +89,9 @@ class SondeLoraClient:
 
                     # Send to SondeHub
                     self.sondehub_client.send_packet(decoded_data)
+
+                    if self.on_sonde_packet:
+                        self.on_sonde_packet(decoded_data)
 
                 except Exception as e:
                     pass
