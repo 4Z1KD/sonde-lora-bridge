@@ -1,4 +1,4 @@
-# SondeLoraBridge
+# 🎈 SondeLoraBridge 🖧
 
 SondeLoraBridge forwards radiosonde telemetry packets over LoRa (Meshtastic)
 
@@ -194,6 +194,3 @@ systemctl status sonde-lora-bridge.service
 - The service is configured to automatically restart if it exits or the device reconnects.
 
 ---
-
-Happy hacking 🚀
-
