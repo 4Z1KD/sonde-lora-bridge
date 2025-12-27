@@ -212,6 +212,8 @@ class MainWindow(QMainWindow):
             ("batt", "Battery (V)"),
         ]
 
+        
+
         self.status_label = QLabel("Disconnected")
 
         self.table = QTableWidget(0, len(self.fields))
@@ -241,6 +243,7 @@ class MainWindow(QMainWindow):
     # GUI update logic
     # ===============================
 
+
     def add_packet_row(self, data: dict):
         sorting = self.table.isSortingEnabled()
         if sorting:
@@ -250,16 +253,10 @@ class MainWindow(QMainWindow):
         self.table.insertRow(row)
 
         for col, (key, _) in enumerate(self.fields):
-            value = data.get(key, "")
-
-            if isinstance(value, float):
-                value = f"{value:.2f}"
-            elif value is None:
-                value = ""
-
-            item = QTableWidgetItem(str(value))
-            item.setFlags(item.flags() ^ Qt.ItemFlag.ItemIsEditable)
-            self.table.setItem(row, col, item)
+          value = str(data.get(key, ""))
+          item = QTableWidgetItem(value)
+          item.setFlags(item.flags() ^ Qt.ItemFlag.ItemIsEditable)
+          self.table.setItem(row, col, item)
 
         if sorting:
             self.table.setSortingEnabled(True)
