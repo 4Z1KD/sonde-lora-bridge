@@ -141,6 +141,13 @@ class SondeHubClient:
         for field in telemetry_fields:
             if field in mapped_packet:
                 telemetry[field] = mapped_packet[field]
+        
+        #remove humidity if == -1
+        if "pressure" in telemetry and telemetry["pressure"] < 0:
+            del telemetry["pressure"]
+        #remove humidity if == -1
+        if "humidity" in telemetry and telemetry["humidity"] < 0:
+            del telemetry["humidity"]
 
         # Uploader information
         if self.uploader_position:
