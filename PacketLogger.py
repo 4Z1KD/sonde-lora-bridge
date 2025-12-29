@@ -9,13 +9,17 @@ class PacketLogger:
     Creates a separate log file for each day with format: packets_YYYY-MM-DD.jsonl
     """
     
-    def __init__(self, log_dir: str = "packet_logs"):
+    def __init__(self, log_dir: str = None):
         """
         Initialize the packet logger.
         
         Args:
-            log_dir (str): Directory to store log files (default: "packet_logs")
+            log_dir (str): Directory to store log files (default: "packet_logs" relative to script location)
         """
+        if log_dir is None:
+            # Use script directory as base, not current working directory
+            log_dir = str(Path(__file__).parent / "packet_logs")
+        
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(exist_ok=True)
         
@@ -55,6 +59,7 @@ class PacketLogger:
                 packet_data["logged_at"] = datetime.now().isoformat()
             
             # Append as JSON line
+            print(f"Logging packet to {log_file}")
             with open(log_file, "a") as f:
                 f.write(json.dumps(packet_data) + "\n")
                 
