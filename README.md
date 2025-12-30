@@ -23,7 +23,11 @@ cd sonde-lora-bridge
 ---
 
 ### 2. Create a virtual environment
-
+Make sure you have venv installed
+```bash
+apt install python3.12-venv
+```
+Create the venv
 ```bash
 python3 -m venv venv312
 ```
