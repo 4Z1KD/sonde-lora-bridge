@@ -77,12 +77,12 @@ class SondeLoraClient:
                     cbor_bytes = bytes.fromhex(text_payload)
                     decoded_data = self.optimizer.from_cbor2(cbor_bytes)
                     
-                    print(f"Text message received: {text_payload}\n")
-                    print("="*50)
+                    print(f"\nText message received: {text_payload}\n")
+                    print("─"*32)
                     print("SONDE DATA RECEIVED")
-                    print("="*50)
+                    print("─"*32)
                     print(json.dumps(decoded_data, indent=2))
-                    print("="*50 + "\n")
+                    print("─"*32 + "\n")
                     
                     # Log the decoded packet
                     self.packet_logger.log_packet(decoded_data)
