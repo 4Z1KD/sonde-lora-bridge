@@ -122,7 +122,7 @@ Configure the following parameters:
 #### 7.1 Create the script
 
 ```bash
-sudo nano /home/sonde/run_sonde_lora_bridge.sh
+sudo nano /home/[YOUR_USER]/run_sonde_lora_bridge.sh
 ```
 
 #### 7.2 Script contents
@@ -133,7 +133,7 @@ sudo nano /home/sonde/run_sonde_lora_bridge.sh
 set -e
 
 # Absolute path to the project
-PROJECT_DIR="/home/sonde/sonde-lora-bridge"
+PROJECT_DIR="/home/[YOUR_USER]/sonde-lora-bridge"
 
 # Activate virtual environment
 source "$PROJECT_DIR/venv312/bin/activate"
@@ -145,7 +145,7 @@ python "$PROJECT_DIR/SondeLoraBridge.py"
 Make it executable:
 
 ```bash
-sudo chmod +x /home/sonde/run_sonde_lora_bridge.sh
+sudo chmod +x /home/[YOUR_USER]/run_sonde_lora_bridge.sh
 ```
 
 ---
@@ -171,9 +171,9 @@ Wants=dev-lilygo.device
 
 [Service]
 Type=simple
-User=sonde
-WorkingDirectory=/home/sonde
-ExecStart=/home/sonde/run_sonde_lora_bridge.sh
+User=[YOUR_USER]
+WorkingDirectory=/home/[YOUR_USER]
+ExecStart=/home/[YOUR_USER]/run_sonde_lora_bridge.sh
 Restart=always
 RestartSec=10
 
