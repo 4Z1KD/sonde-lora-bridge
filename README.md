@@ -140,7 +140,7 @@ python "$PROJECT_DIR/SondeLoraBridge.py"
 Make it executable:
 
 ```bash
-chmod +x /home/sonde/run_sonde_lora_bridge.sh
+sudo chmod +x /home/sonde/run_sonde_lora_bridge.sh
 ```
 
 ---
