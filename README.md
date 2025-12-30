@@ -43,7 +43,7 @@ source venv312/bin/activate
 ### 3. Install requirements
 
 ```bash
-pip install -r requirements.txt
+cat requirements.txt | xargs -n 1 pip install
 ```
 
 ---
