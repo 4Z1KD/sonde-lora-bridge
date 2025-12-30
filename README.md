@@ -1,10 +1,13 @@
 # 🎈 SondeLoraBridge 🖧
+Forwards radiosonde telemetry packets over LoRa (Meshtastic)
 
-forwards radiosonde telemetry packets over LoRa (Meshtastic)
+🌐 [website](https://4z1kd.github.io/sonde-lora-bridge/) &nbsp;&nbsp;&nbsp;&nbsp; 💻 [dashboard](https://4z1kd.github.io/sonde-lora-bridge/dashboard.html)
 
-🌐[website](https://4z1kd.github.io/sonde-lora-bridge/)
+## ⚠️ Important Note
 
-💻[dashboard](https://4z1kd.github.io/sonde-lora-bridge/dashboard.html)
+**The SondeLoraBridge comes hand-in-hand with the SondeLoraClient.** You do **not** have to install both.
+- **Bridge:** Install `SondeLoraBridge` if you have [radiosonde_auto_rx](https://github.com/projecthorus/radiosonde_auto_rx/) installed and you want to forward the radiosonde packets over LoRa.
+- **Client:** Install `SondeLoraClient` if you want to receive LoRa packets and forward them to SondeHub or another service.
 
 ---
 
@@ -196,5 +199,49 @@ systemctl status sonde-lora-bridge.service
   journalctl -u sonde-lora-bridge.service -f
   ```
 - The service is configured to automatically restart if it exits or the device reconnects.
+<br>
+<br>
+<br>
+# 🎈 SondeLoraClient 🖧
+Receive LoRa packets, display, log and forward them to SondeHub
+
+## Setup
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/4Z1KD/sonde-lora-bridge.git
+cd sonde-lora-bridge
+```
 
 ---
+
+### 2. Create a virtual environment
+
+```bash
+python3 -m venv venv312
+```
+
+Activate it:
+
+```bash
+/venv312/Scripts/activate
+```
+
+---
+
+### 3. Install requirements
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Create a batch file
+```bash
+@echo off
+REM Activate the virtual environment
+call C:\[PATH TO YOUR VENV]\Scripts\activate
+REM Run your Python script
+python C:\[PATH TO YOUR PROJECT]\sonde-lora-bridge\gui.py
+exit
+```
