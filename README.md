@@ -245,3 +245,4 @@ REM Run your Python script
 python C:\[PATH TO YOUR PROJECT]\sonde-lora-bridge\gui.py
 exit
 ```
+<img width="1600" height="869" alt="image" src="https://github.com/user-attachments/assets/65705dfd-a001-432c-906d-b0bcfc2ec367" />
