@@ -89,6 +89,11 @@ The device will now be available as:
 /dev/lilygo
 ```
 
+Add your user to the dialog group
+```bash
+sudo usermod -aG dialout $USER
+```
+
 Use this value when configuring `meshtastic_port`.
 
 ---
