@@ -209,8 +209,7 @@ systemctl status sonde-lora-bridge.service
   ```
 - The service is configured to automatically restart if it exits or the device reconnects.
 <br>
-<br>
-<br>
+
 # 🎈 SondeLoraClient 🖧
 Receive LoRa packets, display, log and forward them to SondeHub
 
