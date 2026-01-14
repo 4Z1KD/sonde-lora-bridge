@@ -1,5 +1,6 @@
 import json
 import sys
+from datetime import datetime
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -199,7 +200,7 @@ class MainWindow(QMainWindow):
             ("model", "Model"),
             ("callsign", "Callsign"),
             ("frame", "Frame"),
-            ("time", "Time (UTC)"),
+            ("time", "Time (Local)"),
             ("latitude", "Latitude"),
             ("longitude", "Longitude"),
             ("altitude", "Altitude (m)"),
@@ -253,7 +254,21 @@ class MainWindow(QMainWindow):
         self.table.insertRow(row)
 
         for col, (key, _) in enumerate(self.fields):
-          value = str(data.get(key, ""))
+          value = data.get(key, "")
+          
+          # Convert UTC time to local time
+          if key == "time" and value:
+            try:
+              # Parse ISO format UTC time
+              utc_time = datetime.fromisoformat(value.replace('Z', '+00:00'))
+              # Convert to local time
+              local_time = utc_time.astimezone()
+              value = local_time.isoformat(timespec='seconds')
+            except (ValueError, AttributeError):
+              # If parsing fails, keep original value
+              pass
+          
+          value = str(value)
           item = QTableWidgetItem(value)
           item.setFlags(item.flags() ^ Qt.ItemFlag.ItemIsEditable)
           self.table.setItem(row, col, item)
