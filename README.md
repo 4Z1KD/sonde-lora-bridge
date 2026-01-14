@@ -23,7 +23,11 @@ cd sonde-lora-bridge
 ---
 
 ### 2. Create a virtual environment
-
+Make sure you have venv installed
+```bash
+sudo apt install python3.12-venv
+```
+Create the venv
 ```bash
 python3 -m venv venv312
 ```
@@ -39,7 +43,7 @@ source venv312/bin/activate
 ### 3. Install requirements
 
 ```bash
-pip install -r requirements.txt
+cat requirements.txt | xargs -n 1 pip install
 ```
 
 ---
@@ -85,6 +89,11 @@ The device will now be available as:
 /dev/lilygo
 ```
 
+Add your user to the dialog group
+```bash
+sudo usermod -aG dialout $USER
+```
+
 Use this value when configuring `meshtastic_port`.
 
 ---
@@ -113,7 +122,7 @@ Configure the following parameters:
 #### 7.1 Create the script
 
 ```bash
-sudo nano /home/sonde/run_sonde_lora_bridge.sh
+sudo nano /home/[YOUR_USER]/run_sonde_lora_bridge.sh
 ```
 
 #### 7.2 Script contents
@@ -124,7 +133,7 @@ sudo nano /home/sonde/run_sonde_lora_bridge.sh
 set -e
 
 # Absolute path to the project
-PROJECT_DIR="/home/sonde/sonde-lora-bridge"
+PROJECT_DIR="/home/[YOUR_USER]/sonde-lora-bridge"
 
 # Activate virtual environment
 source "$PROJECT_DIR/venv312/bin/activate"
@@ -136,7 +145,7 @@ python "$PROJECT_DIR/SondeLoraBridge.py"
 Make it executable:
 
 ```bash
-chmod +x /home/sonde/run_sonde_lora_bridge.sh
+sudo chmod +x /home/[YOUR_USER]/run_sonde_lora_bridge.sh
 ```
 
 ---
@@ -162,9 +171,9 @@ Wants=dev-lilygo.device
 
 [Service]
 Type=simple
-User=sonde
-WorkingDirectory=/home/sonde
-ExecStart=/home/sonde/run_sonde_lora_bridge.sh
+User=[YOUR_USER]
+WorkingDirectory=/home/[YOUR_USER]
+ExecStart=/home/[YOUR_USER]/run_sonde_lora_bridge.sh
 Restart=always
 RestartSec=10
 
@@ -200,8 +209,7 @@ systemctl status sonde-lora-bridge.service
   ```
 - The service is configured to automatically restart if it exits or the device reconnects.
 <br>
-<br>
-<br>
+
 # 🎈 SondeLoraClient 🖧
 Receive LoRa packets, display, log and forward them to SondeHub
 
@@ -245,3 +253,4 @@ REM Run your Python script
 python C:\[PATH TO YOUR PROJECT]\sonde-lora-bridge\gui.py
 exit
 ```
+<img width="1600" height="869" alt="image" src="https://github.com/user-attachments/assets/65705dfd-a001-432c-906d-b0bcfc2ec367" />
