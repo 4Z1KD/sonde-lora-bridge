@@ -1,4 +1,5 @@
 import socket
+from LEDController import LEDController
 
 class DataReceiver:
     """
@@ -6,7 +7,7 @@ class DataReceiver:
     and outputs to the callback function.
     """
 
-    def __init__(self, host='0.0.0.0', port=8080, buffer_size=4096, callback=None):
+    def __init__(self, host='0.0.0.0', port=8080, buffer_size=4096, callback=None, enable_led=False, led_pin=17):
         self.host = host
         self.port = port
         self.buffer_size = buffer_size
@@ -14,6 +15,11 @@ class DataReceiver:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind((self.host, self.port))
         # print(f"Listening on UDP {self.host}:{self.port}")
+        
+        # Initialize LED controller if enabled
+        self.led = None
+        if enable_led:
+            self.led = LEDController(gpio_pin=led_pin, blink_duration=0.2)
 
     def listen(self):
         """
@@ -22,11 +28,15 @@ class DataReceiver:
         try:
             while True:
                 data, addr = self.sock.recvfrom(self.buffer_size)
+                if self.led:
+                    self.led.blink()
                 self.callback(data)
 
         except KeyboardInterrupt:
             print("\nStopping receiver.")
         finally:
+            if self.led:
+                self.led.cleanup()
             self.sock.close()
 
 

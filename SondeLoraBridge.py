@@ -18,7 +18,8 @@ class SondeLoraBridge:
     """
 
     def __init__(self, host='0.0.0.0', port=8080, count_threshold=10, 
-                 time_threshold=15, meshtastic_port=None, target_device_id=None, channel=None):
+                 time_threshold=15, meshtastic_port=None, target_device_id=None, channel=None,
+                 enable_led=False, led_pin=17):
         """
         Initialize the bridge.
 
@@ -30,6 +31,8 @@ class SondeLoraBridge:
             meshtastic_port (str): Serial port for Meshtastic device
             target_device_id (str): Target Meshtastic device ID for direct messages
             channel (int): Target channel ID for channel messages
+            enable_led (bool): Enable LED blinking on packet arrival (for RPi)
+            led_pin (int): GPIO pin number for LED (BCM numbering). Default is 17.
         """
         # Create the workload manager with internal callback
         self.manager = WorkloadManager(
@@ -42,7 +45,9 @@ class SondeLoraBridge:
         self.listener = DataReceiver(
             host=host,
             port=port,
-            callback=self._on_data_received
+            callback=self._on_data_received,
+            enable_led=enable_led,
+            led_pin=led_pin
         )
         
         # Initialize the data optimizer
